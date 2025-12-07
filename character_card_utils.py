@@ -198,6 +198,10 @@ def open_image_safely(image_path_or_data):
     """
     Safely open an image file or data.
     
+    Utility function for safely opening images from various sources.
+    Currently not used internally but provided as a convenience function
+    for external scripts or future extensions.
+    
     Args:
         image_path_or_data: File path (str), bytes, or file-like object
         

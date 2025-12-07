@@ -2,12 +2,14 @@ import os
 import sys
 import io
 import re
+import base64
 import atexit
 import threading
 import time
 from collections import deque
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template_string, send_file, send_from_directory
+from PIL import Image
 
 from settings_manager import SettingsManager
 from handy_controller import HandyController
@@ -371,7 +373,6 @@ def import_character_card_route():
             img_buffer = io.BytesIO()
             result['image'].save(img_buffer, format='PNG')
             img_buffer.seek(0)
-            import base64
             img_b64 = base64.b64encode(img_buffer.getvalue()).decode('ascii')
             settings.profile_picture_b64 = f"data:image/png;base64,{img_b64}"
         
@@ -409,8 +410,6 @@ def export_character_card_route():
         image = None
         if settings.profile_picture_b64:
             try:
-                import base64
-                from PIL import Image
                 # Remove data URL prefix if present
                 b64_data = settings.profile_picture_b64
                 if ',' in b64_data:
