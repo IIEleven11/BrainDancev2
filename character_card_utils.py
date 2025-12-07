@@ -67,7 +67,33 @@ def import_character_card(image_data):
         }
 
 
-def map_tavern_to_internal(tavern_card):
+def replace_placeholders(text, char_name='BOT', user_name='YOU'):
+    """
+    Replace {{char}} and {{user}} placeholders in text.
+    
+    Args:
+        text: String containing placeholders
+        char_name: Name to replace {{char}} with
+        user_name: Name to replace {{user}} with
+        
+    Returns:
+        str: Text with placeholders replaced
+    """
+    if not text:
+        return text
+    
+    # Replace placeholders (case-insensitive)
+    text = text.replace('{{char}}', char_name)
+    text = text.replace('{{Char}}', char_name)
+    text = text.replace('{{CHAR}}', char_name)
+    text = text.replace('{{user}}', user_name)
+    text = text.replace('{{User}}', user_name)
+    text = text.replace('{{USER}}', user_name)
+    
+    return text
+
+
+def map_tavern_to_internal(tavern_card, user_name='YOU'):
     """
     Map Tavern/SillyTavern card fields to internal format.
     
@@ -81,6 +107,7 @@ def map_tavern_to_internal(tavern_card):
     
     Args:
         tavern_card: Dict with Tavern format fields
+        user_name: Name to use for {{user}} placeholder replacement
         
     Returns:
         dict: Mapped character data for internal use
@@ -103,14 +130,20 @@ def map_tavern_to_internal(tavern_card):
     
     persona_desc = ' '.join(persona_parts) if persona_parts else 'An AI companion'
     
-    # Get first message/greeting
+    # Replace placeholders in persona description
+    persona_desc = replace_placeholders(persona_desc, ai_name, user_name)
+    
+    # Get first message/greeting and replace placeholders
     greeting = tavern_card.get('first_mes', tavern_card.get('greeting', ''))
+    greeting = replace_placeholders(greeting, ai_name, user_name)
     
-    # Get scenario
+    # Get scenario and replace placeholders
     scenario = tavern_card.get('scenario', '')
+    scenario = replace_placeholders(scenario, ai_name, user_name)
     
-    # Get example messages
+    # Get example messages and replace placeholders
     mes_example = tavern_card.get('mes_example', '')
+    mes_example = replace_placeholders(mes_example, ai_name, user_name)
     
     # Return mapped data
     return {

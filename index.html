@@ -119,6 +119,14 @@
 
         #easter-egg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #0f0; font-family: 'Courier New', monospace; font-size: 1.5em; display: none; align-items: center; justify-content: center; z-index: 10001; opacity: 0; transition: opacity 1s ease-in-out; text-align: center; }
 
+        #character-viewer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9998; }
+        #character-viewer-box { background-color: var(--background); padding: 30px; border-radius: 12px; border: 1px solid var(--background-lighter); box-shadow: 0 8px 32px var(--shadow); max-width: 600px; max-height: 80vh; overflow-y: auto; }
+        #character-viewer-box h2 { color: var(--cyan); margin-top: 0; }
+        #character-viewer-box .viewer-field { margin-bottom: 15px; }
+        #character-viewer-box .viewer-field label { display: block; font-size: 0.9em; color: var(--purple); margin-bottom: 5px; font-weight: 600; }
+        #character-viewer-box .viewer-field textarea { width: 100%; min-height: 80px; resize: vertical; }
+        #character-viewer-box .viewer-buttons { display: flex; gap: 10px; margin-top: 20px; }
+
     </style>
 </head>
 <body>
@@ -173,6 +181,7 @@
                     Import Card
                 </label>
                 <input type="file" id="character-card-upload" accept=".png" style="display: none;">
+                <button id="view-character-btn" class="my-button" style="margin-bottom: 10px;">View Card Details</button>
                 <button id="export-character-btn" class="my-button">Export Card</button>
             </div>
         </div>
@@ -205,6 +214,30 @@
     </div>
     <div id="setup-overlay"><div id="setup-box"></div></div>
     <div id="easter-egg-overlay"></div>
+    <div id="character-viewer-overlay">
+        <div id="character-viewer-box">
+            <h2>Character Card Details</h2>
+            <div class="viewer-field">
+                <label>Character Name:</label>
+                <input type="text" id="viewer-name" class="input-text" readonly>
+            </div>
+            <div class="viewer-field">
+                <label>Personality/Description:</label>
+                <textarea id="viewer-persona" class="input-text" readonly></textarea>
+            </div>
+            <div class="viewer-field">
+                <label>Greeting Message:</label>
+                <textarea id="viewer-greeting" class="input-text" readonly></textarea>
+            </div>
+            <div class="viewer-field">
+                <label>Scenario:</label>
+                <textarea id="viewer-scenario" class="input-text" readonly></textarea>
+            </div>
+            <div class="viewer-buttons">
+                <button id="close-viewer-btn" class="my-button">Close</button>
+            </div>
+        </div>
+    </div>
     <script>
         const D = document;
         const userChatInput = D.getElementById('user-chat-input');
@@ -520,6 +553,43 @@
                 statusText.textContent = 'Error exporting character card';
             }
         });
+        
+        // Character Card Viewer
+        const viewCharacterBtn = D.getElementById('view-character-btn');
+        const characterViewerOverlay = D.getElementById('character-viewer-overlay');
+        const closeViewerBtn = D.getElementById('close-viewer-btn');
+        
+        viewCharacterBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/get_character_data');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    D.getElementById('viewer-name').value = data.character.name || '';
+                    D.getElementById('viewer-persona').value = data.character.persona || '';
+                    D.getElementById('viewer-greeting').value = data.character.greeting || '';
+                    D.getElementById('viewer-scenario').value = data.character.scenario || '';
+                    characterViewerOverlay.style.display = 'flex';
+                } else {
+                    statusText.textContent = 'No character data available';
+                }
+            } catch (error) {
+                console.error('Error loading character data:', error);
+                statusText.textContent = 'Error loading character data';
+            }
+        });
+        
+        closeViewerBtn.addEventListener('click', () => {
+            characterViewerOverlay.style.display = 'none';
+        });
+        
+        // Close viewer when clicking outside
+        characterViewerOverlay.addEventListener('click', (e) => {
+            if (e.target === characterViewerOverlay) {
+                characterViewerOverlay.style.display = 'none';
+            }
+        });
+        
         setElevenLabsKeyButton.addEventListener('click', async () => {
             const apiKey = elevenLabsKeyInput.value.trim();
             if(!apiKey) return;

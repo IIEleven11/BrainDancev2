@@ -12,6 +12,9 @@ class SettingsManager:
         self.ai_name = "BOT" # New field
         self.persona_desc = "An energetic and passionate girlfriend"
         self.profile_picture_b64 = ""
+        self.character_greeting = ""
+        self.character_scenario = ""
+        self.character_mes_example = ""
         self.patterns = []
         self.milking_patterns = []
         self.rules = []
@@ -45,6 +48,9 @@ class SettingsManager:
             self.ai_name = data.get("ai_name", "BOT") # Load name
             self.persona_desc = data.get("persona_desc", "An energetic and passionate girlfriend")
             self.profile_picture_b64 = data.get("profile_picture_b64", "")
+            self.character_greeting = data.get("character_greeting", "")
+            self.character_scenario = data.get("character_scenario", "")
+            self.character_mes_example = data.get("character_mes_example", "")
             self.patterns = data.get("patterns", [])
             self.milking_patterns = data.get("milking_patterns", [])
             self.rules = data.get("rules", [])
@@ -84,6 +90,9 @@ class SettingsManager:
                 "ai_name": self.ai_name, # Save name
                 "persona_desc": self.persona_desc,
                 "profile_picture_b64": self.profile_picture_b64,
+                "character_greeting": self.character_greeting,
+                "character_scenario": self.character_scenario,
+                "character_mes_example": self.character_mes_example,
                 "elevenlabs_api_key": self.elevenlabs_api_key, "elevenlabs_voice_id": self.elevenlabs_voice_id,
                 "patterns": self.patterns, "milking_patterns": self.milking_patterns,
                 "rules": self.rules, "user_profile": self.user_profile,
