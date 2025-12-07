@@ -120,7 +120,7 @@
         #easter-egg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #0f0; font-family: 'Courier New', monospace; font-size: 1.5em; display: none; align-items: center; justify-content: center; z-index: 10001; opacity: 0; transition: opacity 1s ease-in-out; text-align: center; }
 
         #character-viewer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9998; }
-        #character-viewer-box { background-color: var(--background); padding: 30px; border-radius: 12px; border: 1px solid var(--background-lighter); box-shadow: 0 8px 32px var(--shadow); max-width: 600px; max-height: 80vh; overflow-y: auto; }
+        #character-viewer-box { background-color: var(--background); padding: 30px; border-radius: 12px; border: 1px solid var(--background-lighter); box-shadow: 0 8px 32px var(--shadow); max-width: 1200px; max-height: 92vh; overflow-y: auto; }
         #character-viewer-box h2 { color: var(--cyan); margin-top: 0; }
         #character-viewer-box .viewer-field { margin-bottom: 15px; }
         #character-viewer-box .viewer-field label { display: block; font-size: 0.9em; color: var(--purple); margin-bottom: 5px; font-weight: 600; }
@@ -171,7 +171,9 @@
             </label>
             <input type="file" id="pfp-upload" accept="image/*" style="display: none;">
             <input type="text" id="ai-name-input" class="input-text" placeholder="AI's Name..." style="margin-bottom: 10px;">
-            <button id="set-ai-name-btn" class="my-button" style="margin-bottom: 15px;">Set Name</button>
+            <button id="set-ai-name-btn" class="my-button" style="margin-bottom: 15px;">Set AI Name</button>
+            <input type="text" id="user-name-input" class="input-text" placeholder="Your Name..." style="margin-bottom: 10px;">
+            <button id="set-user-name-btn" class="my-button" style="margin-bottom: 15px;">Set Your Name</button>
             <input type="text" id="persona-input" class="input-text" placeholder="Describe the AI's persona...">
             <button id="set-persona-btn" class="my-button" style="margin-top: 10px;">Set Persona</button>
             
@@ -245,6 +247,8 @@
         const setPersonaBtn = D.getElementById('set-persona-btn');
         const aiNameInput = D.getElementById('ai-name-input');
         const setAiNameBtn = D.getElementById('set-ai-name-btn');
+        const userNameInput = D.getElementById('user-name-input');
+        const setUserNameBtn = D.getElementById('set-user-name-btn');
         const elevenLabsKeyInput = D.getElementById('elevenlabs-key-input');
         const setElevenLabsKeyButton = D.getElementById('set-elevenlabs-key-button');
         const setupOverlay = D.getElementById('setup-overlay');
@@ -412,6 +416,9 @@
                     aiNameInput.value = aiName;
                     D.querySelector('#typing-indicator .speaker-name').textContent = aiName;
                 }
+                if(data.user_name) {
+                    userNameInput.value = data.user_name;
+                }
                 if (data.pfp) {
                     pfpPreview.src = data.pfp;
                     typingIndicatorPfp.src = data.pfp;
@@ -457,6 +464,14 @@
                 aiName = data.name;
                 statusText.textContent = `AI name updated to ${aiName}!`;
                 D.querySelectorAll('.bot-bubble .speaker-name').forEach(el => el.textContent = aiName);
+            }
+        });
+        setUserNameBtn.addEventListener('click', async () => {
+            const newName = userNameInput.value.trim();
+            if (!newName) return;
+            const data = await apiCall('/set_user_name', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: newName}) });
+            if (data && data.status === 'success') {
+                statusText.textContent = `Your name updated to ${data.name}!`;
             }
         });
         toggleSidebarBtn.addEventListener('click', () => {

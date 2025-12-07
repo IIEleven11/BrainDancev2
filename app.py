@@ -221,7 +221,7 @@ def check_settings_route():
     if settings.handy_key and settings.min_depth < settings.max_depth:
         return jsonify({
             "configured": True, "persona": settings.persona_desc, "handy_key": settings.handy_key,
-            "ai_name": settings.ai_name, "elevenlabs_key": settings.elevenlabs_api_key,
+            "ai_name": settings.ai_name, "user_name": settings.user_name, "elevenlabs_key": settings.elevenlabs_api_key,
             "pfp": settings.profile_picture_b64,
             "timings": { "auto_min": settings.auto_min_time, "auto_max": settings.auto_max_time, "milking_min": settings.milking_min_time, "milking_max": settings.milking_max_time, "edging_min": settings.edging_min_time, "edging_max": settings.edging_max_time }
         })
@@ -229,6 +229,7 @@ def check_settings_route():
         "configured": False,
         "persona": settings.persona_desc,
         "ai_name": settings.ai_name,
+        "user_name": settings.user_name,
         "pfp": settings.profile_picture_b64
     })
 
@@ -246,6 +247,14 @@ def set_ai_name_route():
         return jsonify({"status": "special_persona_activated", "persona": "GLaDOS", "message": "Oh, it's *you*."})
 
     settings.ai_name = name; settings.save()
+    return jsonify({"status": "success", "name": name})
+
+@app.route('/set_user_name', methods=['POST'])
+def set_user_name_route():
+    name = request.json.get('name', 'YOU').strip()
+    if not name: name = 'YOU'
+    settings.user_name = name
+    settings.save()
     return jsonify({"status": "success", "name": name})
 
 @app.route('/signal_edge', methods=['POST'])
@@ -361,8 +370,8 @@ def import_character_card_route():
         # Read the file data
         image_data = file.read()
         
-        # Import the character card
-        result = import_character_card(image_data)
+        # Import the character card with user's custom name
+        result = import_character_card(image_data, settings.user_name)
         
         if not result['success']:
             return jsonify({"status": "error", "message": result['error']}), 400

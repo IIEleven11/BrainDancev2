@@ -13,12 +13,13 @@ from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 
-def import_character_card(image_data):
+def import_character_card(image_data, user_name='YOU'):
     """
     Import a character card from a PNG image with embedded Tavern metadata.
     
     Args:
         image_data: Binary image data (bytes) or file-like object
+        user_name: Name to use for {{user}} placeholder replacement (default: 'YOU')
         
     Returns:
         dict: A dictionary containing:
@@ -48,8 +49,8 @@ def import_character_card(image_data):
         chara_data_json = base64.b64decode(chara_data_b64)
         character_card = json.loads(chara_data_json)
         
-        # Map Tavern fields to internal format
-        mapped_data = map_tavern_to_internal(character_card)
+        # Map Tavern fields to internal format with custom user name
+        mapped_data = map_tavern_to_internal(character_card, user_name)
         
         return {
             'success': True,

@@ -10,6 +10,7 @@ class SettingsManager:
         # Default values
         self.handy_key = ""
         self.ai_name = "BOT" # New field
+        self.user_name = "YOU" # User's name for {{user}} placeholder
         self.persona_desc = "An energetic and passionate girlfriend"
         self.profile_picture_b64 = ""
         self.character_greeting = ""
@@ -46,6 +47,7 @@ class SettingsManager:
             data = json.loads(self.file_path.read_text())
             self.handy_key = data.get("handy_key", "")
             self.ai_name = data.get("ai_name", "BOT") # Load name
+            self.user_name = data.get("user_name", "YOU") # Load user name
             self.persona_desc = data.get("persona_desc", "An energetic and passionate girlfriend")
             self.profile_picture_b64 = data.get("profile_picture_b64", "")
             self.character_greeting = data.get("character_greeting", "")
@@ -88,6 +90,7 @@ class SettingsManager:
             settings_dict = {
                 "handy_key": self.handy_key,
                 "ai_name": self.ai_name, # Save name
+                "user_name": self.user_name, # Save user name
                 "persona_desc": self.persona_desc,
                 "profile_picture_b64": self.profile_picture_b64,
                 "character_greeting": self.character_greeting,
