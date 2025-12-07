@@ -2,18 +2,21 @@ import os
 import sys
 import io
 import re
+import base64
 import atexit
 import threading
 import time
 from collections import deque
 from pathlib import Path
 from flask import Flask, request, jsonify, render_template_string, send_file, send_from_directory
+from PIL import Image
 
 from settings_manager import SettingsManager
 from handy_controller import HandyController
 from llm_service import LLMService
 from audio_service import AudioService
 from background_modes import AutoModeThread, auto_mode_logic, milking_mode_logic, edging_mode_logic
+from character_card_utils import import_character_card, export_character_card
 
 # ─── INITIALIZATION ───────────────────────────────────────────────────────────────────────────────────
 app = Flask(__name__)
@@ -334,6 +337,104 @@ def start_milking_route():
 def stop_auto_route():
     if auto_mode_active_task: auto_mode_active_task.stop()
     return jsonify({"status": "auto_mode_stopped"})
+
+@app.route('/import_character_card', methods=['POST'])
+def import_character_card_route():
+    """Import a Tavern/SillyTavern character card from an uploaded PNG image."""
+    if 'file' not in request.files:
+        return jsonify({"status": "error", "message": "No file uploaded"}), 400
+    
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"status": "error", "message": "No file selected"}), 400
+    
+    # Check if file is a PNG
+    if not file.filename.lower().endswith('.png'):
+        return jsonify({"status": "error", "message": "Only PNG files are supported for character cards"}), 400
+    
+    try:
+        # Read the file data
+        image_data = file.read()
+        
+        # Import the character card
+        result = import_character_card(image_data)
+        
+        if not result['success']:
+            return jsonify({"status": "error", "message": result['error']}), 400
+        
+        char_data = result['character_data']
+        
+        # Update settings with the imported character data
+        settings.ai_name = char_data['ai_name']
+        settings.persona_desc = char_data['persona_desc']
+        
+        # Convert image to base64 for profile picture
+        if result['image']:
+            img_buffer = io.BytesIO()
+            result['image'].save(img_buffer, format='PNG')
+            img_buffer.seek(0)
+            img_b64 = base64.b64encode(img_buffer.getvalue()).decode('ascii')
+            settings.profile_picture_b64 = f"data:image/png;base64,{img_b64}"
+        
+        # Save settings
+        settings.save()
+        
+        return jsonify({
+            "status": "success",
+            "message": f"Character card '{char_data['ai_name']}' imported successfully",
+            "character": {
+                "name": char_data['ai_name'],
+                "persona": char_data['persona_desc'],
+                "greeting": char_data.get('greeting', ''),
+                "scenario": char_data.get('scenario', '')
+            }
+        })
+        
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error importing character card: {str(e)}"}), 500
+
+@app.route('/export_character_card', methods=['GET'])
+def export_character_card_route():
+    """Export the current character as a Tavern/SillyTavern compatible character card."""
+    try:
+        # Prepare character data for export
+        character_data = {
+            'ai_name': settings.ai_name,
+            'persona_desc': settings.persona_desc,
+            'greeting': '',  # Could be extended to store a greeting
+            'scenario': '',  # Could be extended to store a scenario
+            'mes_example': ''
+        }
+        
+        # Get the current profile picture if available
+        image = None
+        if settings.profile_picture_b64:
+            try:
+                # Remove data URL prefix if present
+                b64_data = settings.profile_picture_b64
+                if ',' in b64_data:
+                    b64_data = b64_data.split(',', 1)[1]
+                img_data = base64.b64decode(b64_data)
+                image = Image.open(io.BytesIO(img_data))
+            except Exception as e:
+                print(f"Could not load profile picture for export: {e}")
+        
+        # Export the character card
+        card_data = export_character_card(character_data, image)
+        
+        # Create filename
+        filename = f"{settings.ai_name.replace(' ', '_')}_character_card.png"
+        
+        # Return as downloadable file
+        return send_file(
+            io.BytesIO(card_data),
+            mimetype='image/png',
+            as_attachment=True,
+            download_name=filename
+        )
+        
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Error exporting character card: {str(e)}"}), 500
 
 # ─── APP STARTUP ───────────────────────────────────────────────────────────────────────────────────
 def on_exit():
