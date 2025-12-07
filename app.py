@@ -218,20 +218,29 @@ def handle_user_message():
 
 @app.route('/check_settings')
 def check_settings_route():
-    if settings.handy_key and settings.min_depth < settings.max_depth:
-        return jsonify({
-            "configured": True, "persona": settings.persona_desc, "handy_key": settings.handy_key,
-            "ai_name": settings.ai_name, "user_name": settings.user_name, "elevenlabs_key": settings.elevenlabs_api_key,
-            "pfp": settings.profile_picture_b64,
-            "timings": { "auto_min": settings.auto_min_time, "auto_max": settings.auto_max_time, "milking_min": settings.milking_min_time, "milking_max": settings.milking_max_time, "edging_min": settings.edging_min_time, "edging_max": settings.edging_max_time }
-        })
-    return jsonify({
-        "configured": False,
+    # Always return all settings for UI display
+    response_data = {
+        "configured": bool(settings.handy_key and settings.min_depth < settings.max_depth),
         "persona": settings.persona_desc,
+        "handy_key": settings.handy_key,
         "ai_name": settings.ai_name,
         "user_name": settings.user_name,
-        "pfp": settings.profile_picture_b64
-    })
+        "elevenlabs_key": settings.elevenlabs_api_key,
+        "pfp": settings.profile_picture_b64,
+        "min_depth": settings.min_depth,
+        "max_depth": settings.max_depth,
+        "min_speed": settings.min_speed,
+        "max_speed": settings.max_speed,
+        "timings": {
+            "auto_min": settings.auto_min_time,
+            "auto_max": settings.auto_max_time,
+            "milking_min": settings.milking_min_time,
+            "milking_max": settings.milking_max_time,
+            "edging_min": settings.edging_min_time,
+            "edging_max": settings.edging_max_time
+        }
+    }
+    return jsonify(response_data)
 
 @app.route('/set_ai_name', methods=['POST'])
 def set_ai_name_route():
