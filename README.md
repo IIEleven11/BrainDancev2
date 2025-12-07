@@ -8,6 +8,7 @@ WINDOWS ONLY.
 
 * AI-Controlled Fun: Chat with an AI that controls your Handy's movements in real-time.
 * Fully Customizable Persona: Change the AI's name, personality, and even their profile picture to create your perfect partner.
+* Character Card Support: Import and export character cards compatible with SillyTavern and Text Generation WebUI (Tavern Card Spec v2). Share your characters or use community-created ones!
 * Interactive Modes: Go beyond simple chat with advanced, interactive modes for Edging, Milking, and Auto-play. You can even influence the AI's patterns mid-session with chat messages!
 * It Remembers You: The AI learns your preferences and remembers details from past chats.
 * Internet-Connected for Control & Voice: The app requires an internet connection to send commands to The Handy's servers. If you enable voice, it also connects to the ElevenLabs API. Your AI model (Ollama) still runs 100% locally on your computer.
@@ -59,6 +60,17 @@ You need two free programs to run the app.
     * Open your web browser and go to the following address:
         http://127.0.0.1:5000
 * The splash screen will appear. Press Enter to begin the on-screen setup guide. Enjoy! 
+
+### Using Character Cards
+
+You can now import character cards from other applications like SillyTavern and Text Generation WebUI! Simply:
+
+1. Open the web interface at http://127.0.0.1:5000
+2. In the sidebar under "Persona", find the "Character Cards" section
+3. Click "Import Card" and select a PNG character card file
+4. The character's personality, name, and image will be loaded automatically
+
+You can also export your own characters to share with others or use in other compatible applications. See [CHARACTER_CARDS.md](CHARACTER_CARDS.md) for more details.
 
 *A Quick Note on Speed
 
