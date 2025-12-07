@@ -218,14 +218,29 @@ def handle_user_message():
 
 @app.route('/check_settings')
 def check_settings_route():
-    if settings.handy_key and settings.min_depth < settings.max_depth:
-        return jsonify({
-            "configured": True, "persona": settings.persona_desc, "handy_key": settings.handy_key,
-            "ai_name": settings.ai_name, "elevenlabs_key": settings.elevenlabs_api_key,
-            "pfp": settings.profile_picture_b64,
-            "timings": { "auto_min": settings.auto_min_time, "auto_max": settings.auto_max_time, "milking_min": settings.milking_min_time, "milking_max": settings.milking_max_time, "edging_min": settings.edging_min_time, "edging_max": settings.edging_max_time }
-        })
-    return jsonify({"configured": False})
+    # Always return all settings for UI display
+    response_data = {
+        "configured": bool(settings.handy_key and settings.min_depth < settings.max_depth),
+        "persona": settings.persona_desc,
+        "handy_key": settings.handy_key,
+        "ai_name": settings.ai_name,
+        "user_name": settings.user_name,
+        "elevenlabs_key": settings.elevenlabs_api_key,
+        "pfp": settings.profile_picture_b64,
+        "min_depth": settings.min_depth,
+        "max_depth": settings.max_depth,
+        "min_speed": settings.min_speed,
+        "max_speed": settings.max_speed,
+        "timings": {
+            "auto_min": settings.auto_min_time,
+            "auto_max": settings.auto_max_time,
+            "milking_min": settings.milking_min_time,
+            "milking_max": settings.milking_max_time,
+            "edging_min": settings.edging_min_time,
+            "edging_max": settings.edging_max_time
+        }
+    }
+    return jsonify(response_data)
 
 @app.route('/set_ai_name', methods=['POST'])
 def set_ai_name_route():
@@ -241,6 +256,15 @@ def set_ai_name_route():
         return jsonify({"status": "special_persona_activated", "persona": "GLaDOS", "message": "Oh, it's *you*."})
 
     settings.ai_name = name; settings.save()
+    return jsonify({"status": "success", "name": name})
+
+@app.route('/set_user_name', methods=['POST'])
+def set_user_name_route():
+    name = request.json.get('name', '').strip()
+    if not name:
+        name = 'YOU'
+    settings.user_name = name
+    settings.save()
     return jsonify({"status": "success", "name": name})
 
 @app.route('/signal_edge', methods=['POST'])
@@ -356,8 +380,8 @@ def import_character_card_route():
         # Read the file data
         image_data = file.read()
         
-        # Import the character card
-        result = import_character_card(image_data)
+        # Import the character card with user's custom name
+        result = import_character_card(image_data, settings.user_name)
         
         if not result['success']:
             return jsonify({"status": "error", "message": result['error']}), 400
@@ -367,6 +391,9 @@ def import_character_card_route():
         # Update settings with the imported character data
         settings.ai_name = char_data['ai_name']
         settings.persona_desc = char_data['persona_desc']
+        settings.character_greeting = char_data.get('greeting', '')
+        settings.character_scenario = char_data.get('scenario', '')
+        settings.character_mes_example = char_data.get('mes_example', '')
         
         # Convert image to base64 for profile picture
         if result['image']:
@@ -393,6 +420,19 @@ def import_character_card_route():
     except Exception as e:
         return jsonify({"status": "error", "message": f"Error importing character card: {str(e)}"}), 500
 
+@app.route('/get_character_data', methods=['GET'])
+def get_character_data_route():
+    """Get the current character data for viewing."""
+    return jsonify({
+        "status": "success",
+        "character": {
+            "name": settings.ai_name,
+            "persona": settings.persona_desc,
+            "greeting": settings.character_greeting,
+            "scenario": settings.character_scenario
+        }
+    })
+
 @app.route('/export_character_card', methods=['GET'])
 def export_character_card_route():
     """Export the current character as a Tavern/SillyTavern compatible character card."""
@@ -401,9 +441,9 @@ def export_character_card_route():
         character_data = {
             'ai_name': settings.ai_name,
             'persona_desc': settings.persona_desc,
-            'greeting': '',  # Could be extended to store a greeting
-            'scenario': '',  # Could be extended to store a scenario
-            'mes_example': ''
+            'greeting': settings.character_greeting,
+            'scenario': settings.character_scenario,
+            'mes_example': settings.character_mes_example
         }
         
         # Get the current profile picture if available

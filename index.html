@@ -119,6 +119,14 @@
 
         #easter-egg-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #0f0; font-family: 'Courier New', monospace; font-size: 1.5em; display: none; align-items: center; justify-content: center; z-index: 10001; opacity: 0; transition: opacity 1s ease-in-out; text-align: center; }
 
+        #character-viewer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 9998; }
+        #character-viewer-box { background-color: var(--background); padding: 30px; border-radius: 12px; border: 1px solid var(--background-lighter); box-shadow: 0 8px 32px var(--shadow); max-width: 1200px; max-height: 92vh; overflow-y: auto; }
+        #character-viewer-box h2 { color: var(--cyan); margin-top: 0; }
+        #character-viewer-box .viewer-field { margin-bottom: 15px; }
+        #character-viewer-box .viewer-field label { display: block; font-size: 0.9em; color: var(--purple); margin-bottom: 5px; font-weight: 600; }
+        #character-viewer-box .viewer-field textarea { width: 100%; min-height: 80px; resize: vertical; }
+        #character-viewer-box .viewer-buttons { display: flex; gap: 10px; margin-top: 20px; }
+
     </style>
 </head>
 <body>
@@ -163,7 +171,9 @@
             </label>
             <input type="file" id="pfp-upload" accept="image/*" style="display: none;">
             <input type="text" id="ai-name-input" class="input-text" placeholder="AI's Name..." style="margin-bottom: 10px;">
-            <button id="set-ai-name-btn" class="my-button" style="margin-bottom: 15px;">Set Name</button>
+            <button id="set-ai-name-btn" class="my-button" style="margin-bottom: 15px;">Set AI Name</button>
+            <input type="text" id="user-name-input" class="input-text" placeholder="Your Name..." style="margin-bottom: 10px;">
+            <button id="set-user-name-btn" class="my-button" style="margin-bottom: 15px;">Set Your Name</button>
             <input type="text" id="persona-input" class="input-text" placeholder="Describe the AI's persona...">
             <button id="set-persona-btn" class="my-button" style="margin-top: 10px;">Set Persona</button>
             
@@ -173,8 +183,38 @@
                     Import Card
                 </label>
                 <input type="file" id="character-card-upload" accept=".png" style="display: none;">
+                <button id="view-character-btn" class="my-button" style="margin-bottom: 10px;">View Card Details</button>
                 <button id="export-character-btn" class="my-button">Export Card</button>
             </div>
+        </div>
+        <div class="setting-section">
+            <h3>Device Settings</h3>
+            <input type="password" id="handy-key-input" class="input-text" placeholder="Handy Connection Key" style="margin-bottom: 10px;">
+            <button id="set-handy-key-btn" class="my-button" style="margin-bottom: 15px;">Save Key</button>
+            
+            <div style="margin-top: 15px;">
+                <p style="font-size: 0.9em; color: var(--comment); margin-bottom: 10px;">Depth Limits (%)</p>
+                <div class="timing-row">
+                    <label for="min-depth-input">Min:</label>
+                    <input type="number" id="min-depth-input" min="0" max="100" step="1" value="5">
+                    <span>-</span>
+                    <label for="max-depth-input">Max:</label>
+                    <input type="number" id="max-depth-input" min="0" max="100" step="1" value="100">
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <p style="font-size: 0.9em; color: var(--comment); margin-bottom: 10px;">Speed Limits (%)</p>
+                <div class="timing-row">
+                    <label for="min-speed-input">Min:</label>
+                    <input type="number" id="min-speed-input" min="0" max="100" step="1" value="10">
+                    <span>-</span>
+                    <label for="max-speed-input">Max:</label>
+                    <input type="number" id="max-speed-input" min="0" max="100" step="1" value="80">
+                </div>
+            </div>
+            
+            <button id="save-device-settings-btn" class="my-button" style="margin-top: 15px;">Save Device Settings</button>
         </div>
         <div class="setting-section">
             <h3>Mode Timings (Seconds)</h3>
@@ -205,6 +245,30 @@
     </div>
     <div id="setup-overlay"><div id="setup-box"></div></div>
     <div id="easter-egg-overlay"></div>
+    <div id="character-viewer-overlay">
+        <div id="character-viewer-box">
+            <h2>Character Card Details</h2>
+            <div class="viewer-field">
+                <label>Character Name:</label>
+                <input type="text" id="viewer-name" class="input-text" readonly>
+            </div>
+            <div class="viewer-field">
+                <label>Personality/Description:</label>
+                <textarea id="viewer-persona" class="input-text" readonly></textarea>
+            </div>
+            <div class="viewer-field">
+                <label>Greeting Message:</label>
+                <textarea id="viewer-greeting" class="input-text" readonly></textarea>
+            </div>
+            <div class="viewer-field">
+                <label>Scenario:</label>
+                <textarea id="viewer-scenario" class="input-text" readonly></textarea>
+            </div>
+            <div class="viewer-buttons">
+                <button id="close-viewer-btn" class="my-button">Close</button>
+            </div>
+        </div>
+    </div>
     <script>
         const D = document;
         const userChatInput = D.getElementById('user-chat-input');
@@ -212,6 +276,15 @@
         const setPersonaBtn = D.getElementById('set-persona-btn');
         const aiNameInput = D.getElementById('ai-name-input');
         const setAiNameBtn = D.getElementById('set-ai-name-btn');
+        const userNameInput = D.getElementById('user-name-input');
+        const setUserNameBtn = D.getElementById('set-user-name-btn');
+        const handyKeyInput = D.getElementById('handy-key-input');
+        const setHandyKeyBtn = D.getElementById('set-handy-key-btn');
+        const minDepthInput = D.getElementById('min-depth-input');
+        const maxDepthInput = D.getElementById('max-depth-input');
+        const minSpeedInput = D.getElementById('min-speed-input');
+        const maxSpeedInput = D.getElementById('max-speed-input');
+        const saveDeviceSettingsBtn = D.getElementById('save-device-settings-btn');
         const elevenLabsKeyInput = D.getElementById('elevenlabs-key-input');
         const setElevenLabsKeyButton = D.getElementById('set-elevenlabs-key-button');
         const setupOverlay = D.getElementById('setup-overlay');
@@ -370,31 +443,60 @@
 
         async function startupCheck() {
             const data = await apiCall('/check_settings');
-            if (data && data.configured) {
-                statusText.textContent = 'Welcome back! Settings loaded.';
-                myHandyKey = data.handy_key;
-                personaInput.value = data.persona;
+            
+            // Always hide splash screen and load settings into UI
+            D.getElementById('splash-screen').style.display = 'none';
+            
+            if (data) {
+                statusText.textContent = data.configured ? 'Welcome back! Settings loaded.' : 'Configure your device in the Device Settings section.';
+                
+                // Load all settings into the UI inputs
+                if (data.handy_key) {
+                    myHandyKey = data.handy_key;
+                    handyKeyInput.value = data.handy_key;
+                }
+                
+                personaInput.value = data.persona || '';
+                
                 if(data.ai_name) {
                     aiName = data.ai_name;
                     aiNameInput.value = aiName;
                     D.querySelector('#typing-indicator .speaker-name').textContent = aiName;
                 }
+                
+                if(data.user_name) {
+                    userNameInput.value = data.user_name;
+                }
+                
                 if (data.pfp) {
                     pfpPreview.src = data.pfp;
                     typingIndicatorPfp.src = data.pfp;
                 }
+                
                 if(data.elevenlabs_key) {
                     elevenLabsKeyInput.value = data.elevenlabs_key;
                     setElevenLabsKeyButton.click();
                 }
+                
+                // Load device settings (depth and speed limits)
+                if (data.min_depth !== undefined) minDepthInput.value = data.min_depth;
+                if (data.max_depth !== undefined) maxDepthInput.value = data.max_depth;
+                if (data.min_speed !== undefined) minSpeedInput.value = data.min_speed;
+                if (data.max_speed !== undefined) maxSpeedInput.value = data.max_speed;
+                
+                // Load timings from data if available
+                if (data.timings) {
+                    D.getElementById('auto-min-time').value = data.timings.auto_min || 4;
+                    D.getElementById('auto-max-time').value = data.timings.auto_max || 7;
+                    D.getElementById('edging-min-time').value = data.timings.edging_min || 5;
+                    D.getElementById('edging-max-time').value = data.timings.edging_max || 8;
+                    D.getElementById('milking-min-time').value = data.timings.milking_min || 2;
+                    D.getElementById('milking-max-time').value = data.timings.milking_max || 5;
+                }
+                
                 if (localStorage.getItem('sidebar_collapsed') === 'true') {
                     D.body.classList.add('sidebar-collapsed');
                 }
-                D.getElementById('splash-screen').style.display = 'none';
-                renderSetup(true, data);
-            } else {
-                const startHandler = (e) => { if(e.key === 'Enter'){ D.removeEventListener('keydown', startHandler); D.getElementById('splash-screen').classList.add('hidden'); setTimeout(() => renderSetup(false), 1000); }};
-                D.addEventListener('keydown', startHandler);
             }
         }
         
@@ -426,6 +528,71 @@
                 D.querySelectorAll('.bot-bubble .speaker-name').forEach(el => el.textContent = aiName);
             }
         });
+        setUserNameBtn.addEventListener('click', async () => {
+            const newName = userNameInput.value.trim();
+            if (!newName) return;
+            const data = await apiCall('/set_user_name', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: newName}) });
+            if (data && data.status === 'success') {
+                statusText.textContent = `Your name updated to ${data.name}!`;
+            }
+        });
+        
+        // Device Settings Event Listeners
+        setHandyKeyBtn.addEventListener('click', async () => {
+            const key = handyKeyInput.value.trim();
+            if (!key) {
+                statusText.textContent = 'Please enter a Handy connection key.';
+                return;
+            }
+            const data = await apiCall('/set_handy_key', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({key: key}) });
+            if (data && data.status === 'success') {
+                myHandyKey = key;
+                statusText.textContent = 'Handy key saved!';
+            }
+        });
+        
+        saveDeviceSettingsBtn.addEventListener('click', async () => {
+            const minDepth = parseInt(minDepthInput.value);
+            const maxDepth = parseInt(maxDepthInput.value);
+            const minSpeed = parseInt(minSpeedInput.value);
+            const maxSpeed = parseInt(maxSpeedInput.value);
+            
+            if (minDepth >= maxDepth) {
+                statusText.textContent = 'Error: Min depth must be less than max depth!';
+                return;
+            }
+            
+            if (minSpeed >= maxSpeed) {
+                statusText.textContent = 'Error: Min speed must be less than max speed!';
+                return;
+            }
+            
+            try {
+                // Save depth limits
+                const depthResult = await apiCall('/set_depth_limits', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({min_depth: minDepth, max_depth: maxDepth})
+                });
+                
+                // Save speed limits
+                const speedResult = await apiCall('/set_speed_limits', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({min_speed: minSpeed, max_speed: maxSpeed})
+                });
+                
+                if (depthResult && speedResult) {
+                    statusText.textContent = 'Device settings saved!';
+                } else {
+                    statusText.textContent = 'Error: Failed to save some settings.';
+                }
+            } catch (error) {
+                statusText.textContent = 'Error: Failed to save device settings.';
+                console.error('Device settings error:', error);
+            }
+        });
+        
         toggleSidebarBtn.addEventListener('click', () => {
             const isCollapsed = D.body.classList.toggle('sidebar-collapsed');
             localStorage.setItem('sidebar_collapsed', isCollapsed);
@@ -520,6 +687,43 @@
                 statusText.textContent = 'Error exporting character card';
             }
         });
+        
+        // Character Card Viewer
+        const viewCharacterBtn = D.getElementById('view-character-btn');
+        const characterViewerOverlay = D.getElementById('character-viewer-overlay');
+        const closeViewerBtn = D.getElementById('close-viewer-btn');
+        
+        viewCharacterBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/get_character_data');
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    D.getElementById('viewer-name').value = data.character.name || '';
+                    D.getElementById('viewer-persona').value = data.character.persona || '';
+                    D.getElementById('viewer-greeting').value = data.character.greeting || '';
+                    D.getElementById('viewer-scenario').value = data.character.scenario || '';
+                    characterViewerOverlay.style.display = 'flex';
+                } else {
+                    statusText.textContent = 'No character data available';
+                }
+            } catch (error) {
+                console.error('Error loading character data:', error);
+                statusText.textContent = 'Error loading character data';
+            }
+        });
+        
+        closeViewerBtn.addEventListener('click', () => {
+            characterViewerOverlay.style.display = 'none';
+        });
+        
+        // Close viewer when clicking outside
+        characterViewerOverlay.addEventListener('click', (e) => {
+            if (e.target === characterViewerOverlay) {
+                characterViewerOverlay.style.display = 'none';
+            }
+        });
+        
         setElevenLabsKeyButton.addEventListener('click', async () => {
             const apiKey = elevenLabsKeyInput.value.trim();
             if(!apiKey) return;

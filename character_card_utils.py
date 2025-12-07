@@ -13,12 +13,13 @@ from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 
-def import_character_card(image_data):
+def import_character_card(image_data, user_name='YOU'):
     """
     Import a character card from a PNG image with embedded Tavern metadata.
     
     Args:
         image_data: Binary image data (bytes) or file-like object
+        user_name: Name to use for {{user}} placeholder replacement (default: 'YOU')
         
     Returns:
         dict: A dictionary containing:
@@ -48,8 +49,8 @@ def import_character_card(image_data):
         chara_data_json = base64.b64decode(chara_data_b64)
         character_card = json.loads(chara_data_json)
         
-        # Map Tavern fields to internal format
-        mapped_data = map_tavern_to_internal(character_card)
+        # Map Tavern fields to internal format with custom user name
+        mapped_data = map_tavern_to_internal(character_card, user_name)
         
         return {
             'success': True,
@@ -67,7 +68,30 @@ def import_character_card(image_data):
         }
 
 
-def map_tavern_to_internal(tavern_card):
+def replace_placeholders(text, char_name='BOT', user_name='YOU'):
+    """
+    Replace {{char}} and {{user}} placeholders in text.
+    
+    Args:
+        text: String containing placeholders
+        char_name: Name to replace {{char}} with
+        user_name: Name to replace {{user}} with
+        
+    Returns:
+        str: Text with placeholders replaced
+    """
+    if not text:
+        return text
+    
+    # Replace placeholders (case-insensitive using regex)
+    import re
+    text = re.sub(r'\{\{char\}\}', char_name, text, flags=re.IGNORECASE)
+    text = re.sub(r'\{\{user\}\}', user_name, text, flags=re.IGNORECASE)
+    
+    return text
+
+
+def map_tavern_to_internal(tavern_card, user_name='YOU'):
     """
     Map Tavern/SillyTavern card fields to internal format.
     
@@ -81,6 +105,7 @@ def map_tavern_to_internal(tavern_card):
     
     Args:
         tavern_card: Dict with Tavern format fields
+        user_name: Name to use for {{user}} placeholder replacement
         
     Returns:
         dict: Mapped character data for internal use
@@ -103,14 +128,20 @@ def map_tavern_to_internal(tavern_card):
     
     persona_desc = ' '.join(persona_parts) if persona_parts else 'An AI companion'
     
-    # Get first message/greeting
+    # Replace placeholders in persona description
+    persona_desc = replace_placeholders(persona_desc, ai_name, user_name)
+    
+    # Get first message/greeting and replace placeholders
     greeting = tavern_card.get('first_mes', tavern_card.get('greeting', ''))
+    greeting = replace_placeholders(greeting, ai_name, user_name)
     
-    # Get scenario
+    # Get scenario and replace placeholders
     scenario = tavern_card.get('scenario', '')
+    scenario = replace_placeholders(scenario, ai_name, user_name)
     
-    # Get example messages
+    # Get example messages and replace placeholders
     mes_example = tavern_card.get('mes_example', '')
+    mes_example = replace_placeholders(mes_example, ai_name, user_name)
     
     # Return mapped data
     return {
