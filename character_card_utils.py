@@ -82,13 +82,10 @@ def replace_placeholders(text, char_name='BOT', user_name='YOU'):
     if not text:
         return text
     
-    # Replace placeholders (case-insensitive)
-    text = text.replace('{{char}}', char_name)
-    text = text.replace('{{Char}}', char_name)
-    text = text.replace('{{CHAR}}', char_name)
-    text = text.replace('{{user}}', user_name)
-    text = text.replace('{{User}}', user_name)
-    text = text.replace('{{USER}}', user_name)
+    # Replace placeholders (case-insensitive using regex)
+    import re
+    text = re.sub(r'\{\{char\}\}', char_name, text, flags=re.IGNORECASE)
+    text = re.sub(r'\{\{user\}\}', user_name, text, flags=re.IGNORECASE)
     
     return text
 
