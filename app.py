@@ -251,8 +251,9 @@ def set_ai_name_route():
 
 @app.route('/set_user_name', methods=['POST'])
 def set_user_name_route():
-    name = request.json.get('name', 'YOU').strip()
-    if not name: name = 'YOU'
+    name = request.json.get('name', '').strip()
+    if not name:
+        name = 'YOU'
     settings.user_name = name
     settings.save()
     return jsonify({"status": "success", "name": name})
