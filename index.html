@@ -567,21 +567,30 @@
                 return;
             }
             
-            // Save depth limits
-            await apiCall('/set_depth_limits', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({min_depth: minDepth, max_depth: maxDepth})
-            });
-            
-            // Save speed limits
-            await apiCall('/set_speed_limits', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({min_speed: minSpeed, max_speed: maxSpeed})
-            });
-            
-            statusText.textContent = 'Device settings saved!';
+            try {
+                // Save depth limits
+                const depthResult = await apiCall('/set_depth_limits', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({min_depth: minDepth, max_depth: maxDepth})
+                });
+                
+                // Save speed limits
+                const speedResult = await apiCall('/set_speed_limits', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({min_speed: minSpeed, max_speed: maxSpeed})
+                });
+                
+                if (depthResult && speedResult) {
+                    statusText.textContent = 'Device settings saved!';
+                } else {
+                    statusText.textContent = 'Error: Failed to save some settings.';
+                }
+            } catch (error) {
+                statusText.textContent = 'Error: Failed to save device settings.';
+                console.error('Device settings error:', error);
+            }
         });
         
         toggleSidebarBtn.addEventListener('click', () => {
